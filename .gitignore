@@ -1,0 +1,5 @@
+node_modules/
+build/
+.tmp-tact-build/
+*.log
+.DS_Store
