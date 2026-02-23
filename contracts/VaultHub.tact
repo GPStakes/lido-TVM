@@ -18,8 +18,15 @@ const E_HUB_PAUSED: Int = 206;
 const E_HUB_INVALID_RESERVE_RATIO: Int = 207;
 const E_HUB_NOT_FACTORY: Int = 208;
 
+const E_HUB_UNDERCOLLATERALIZED: Int = 209;
+const E_HUB_ORACLE_STALE: Int = 210;
+const E_HUB_MAX_LIABILITY: Int = 211;
+const E_HUB_BAD_DEBT: Int = 212;
+const E_HUB_INSUFFICIENT_SHARES: Int = 213;
+
 const TOTAL_BASIS_POINTS: Int = 10000;
 const CONNECT_DEPOSIT: Int = 1000000000; // 1 TON
+const MAX_STALENESS: Int = 172800; // 2 days in seconds
 
 // ── Messages ──
 
@@ -58,6 +65,19 @@ message(0x55504443) UpdateConnection {
     infraFeeBP: Int as uint16;
 }
 
+message(0x4D4E5453) MintShares {
+    queryId: Int as uint64;
+    vault: Address;
+    amount: Int as coins;
+    recipient: Address;
+}
+
+message(0x4255524E) BurnShares {
+    queryId: Int as uint64;
+    vault: Address;
+    amount: Int as coins;
+}
+
 message(0x53544643) SetFactory {
     factory: Address;
 }
@@ -94,6 +114,8 @@ contract VaultHub with Deployable {
     vaultRecords: map<Address, VaultRecord>;
     vaultByIndex: map<Int, Address>;
     processedQueries: map<Int, Bool>;
+    totalSharesMinted: Int as coins;
+    accumulatedFees: map<Address, Int>;
 
     init(admin: Address, factory: Address, oracleAddress: Address) {
         self.admin = admin;
@@ -101,6 +123,7 @@ contract VaultHub with Deployable {
         self.oracleAddress = oracleAddress;
         self.paused = false;
         self.vaultCount = 0;
+        self.totalSharesMinted = 0;
     }
 
     // Factory registration path — called by VaultFactory after deploying a vault
@@ -200,6 +223,91 @@ contract VaultHub with Deployable {
         self.vaultRecords.set(msg.vault, updated);
     }
 
+    receive(msg: MintShares) {
+        self.requireAdmin();
+        self.consumeQuery(msg.queryId);
+        if (!(!self.paused)) { throw(E_HUB_PAUSED); }
+
+        let existing = self.vaultRecords.get(msg.vault);
+        if (!(existing != null)) { throw(E_HUB_NOT_CONNECTED); }
+        let record = existing!!;
+        if (!(record.connected)) { throw(E_HUB_NOT_CONNECTED); }
+
+        // Oracle freshness check
+        if (!(record.reportTimestamp > 0 && (now() - record.reportTimestamp) < MAX_STALENESS)) {
+            throw(E_HUB_ORACLE_STALE);
+        }
+
+        // Fee deduction: infraFeeBP applied to mint amount
+        let fee = msg.amount * record.infraFeeBP / TOTAL_BASIS_POINTS;
+        let netAmount = msg.amount - fee;
+
+        let newLiability = record.liabilityShares + msg.amount;
+
+        // Max liability cap
+        if (!(newLiability <= record.shareLimit)) { throw(E_HUB_MAX_LIABILITY); }
+
+        // Reserve ratio check: totalValue * 10000 / newLiability >= reserveRatioBP
+        // Rearranged to avoid division: totalValue * 10000 >= reserveRatioBP * newLiability
+        if (record.reserveRatioBP > 0 && newLiability > 0) {
+            if (!(record.totalValue * TOTAL_BASIS_POINTS >= record.reserveRatioBP * newLiability)) {
+                throw(E_HUB_UNDERCOLLATERALIZED);
+            }
+        }
+
+        // Accumulate fee
+        if (fee > 0) {
+            let existingFee = self.accumulatedFees.get(msg.vault);
+            if (existingFee != null) {
+                self.accumulatedFees.set(msg.vault, existingFee!! + fee);
+            } else {
+                self.accumulatedFees.set(msg.vault, fee);
+            }
+        }
+
+        // Update record
+        let updated = VaultRecord{
+            owner: record.owner,
+            connected: record.connected,
+            shareLimit: record.shareLimit,
+            liabilityShares: newLiability,
+            totalValue: record.totalValue,
+            inOutDelta: record.inOutDelta,
+            reserveRatioBP: record.reserveRatioBP,
+            infraFeeBP: record.infraFeeBP,
+            liquidityFeeBP: record.liquidityFeeBP,
+            reportTimestamp: record.reportTimestamp
+        };
+        self.vaultRecords.set(msg.vault, updated);
+        self.totalSharesMinted = self.totalSharesMinted + msg.amount;
+    }
+
+    receive(msg: BurnShares) {
+        self.requireAdmin();
+        self.consumeQuery(msg.queryId);
+
+        let existing = self.vaultRecords.get(msg.vault);
+        if (!(existing != null)) { throw(E_HUB_NOT_CONNECTED); }
+        let record = existing!!;
+
+        if (!(record.liabilityShares >= msg.amount)) { throw(E_HUB_INSUFFICIENT_SHARES); }
+
+        let updated = VaultRecord{
+            owner: record.owner,
+            connected: record.connected,
+            shareLimit: record.shareLimit,
+            liabilityShares: record.liabilityShares - msg.amount,
+            totalValue: record.totalValue,
+            inOutDelta: record.inOutDelta,
+            reserveRatioBP: record.reserveRatioBP,
+            infraFeeBP: record.infraFeeBP,
+            liquidityFeeBP: record.liquidityFeeBP,
+            reportTimestamp: record.reportTimestamp
+        };
+        self.vaultRecords.set(msg.vault, updated);
+        self.totalSharesMinted = self.totalSharesMinted - msg.amount;
+    }
+
     receive(msg: ApplyVaultReport) {
         if (!(sender() == self.oracleAddress)) { throw(E_HUB_UNAUTHORIZED); }
         self.consumeQuery(msg.queryId);
@@ -268,6 +376,24 @@ contract VaultHub with Deployable {
 
     get fun get_query_processed(queryId: Int): Bool {
         return self.processedQueries.get(queryId) != null;
+    }
+
+    get fun get_total_shares_minted(): Int {
+        return self.totalSharesMinted;
+    }
+
+    get fun get_accumulated_fees(vault: Address): Int {
+        let fee = self.accumulatedFees.get(vault);
+        if (fee == null) { return 0; }
+        return fee!!;
+    }
+
+    get fun has_bad_debt(vault: Address): Bool {
+        let existing = self.vaultRecords.get(vault);
+        if (existing == null) { return false; }
+        let record = existing!!;
+        if (record.liabilityShares == 0) { return false; }
+        return record.totalValue < record.liabilityShares;
     }
 
     // ── Internal ──

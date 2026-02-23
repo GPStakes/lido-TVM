@@ -127,6 +127,8 @@ contract LazyOracle with Deployable {
         return self.vaultReports.get(vault);
     }
 
+    get fun get_max_staleness(): Int { return 172800; }
+
     get fun is_report_fresh(vault: Address): Bool {
         let report = self.vaultReports.get(vault);
         if (report == null) { return false; }

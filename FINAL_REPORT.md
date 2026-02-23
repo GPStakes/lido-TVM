@@ -5,7 +5,7 @@
 **Date:** 2026-02-23
 **Platform:** TON/TVM via Tact language
 **Total Contracts:** 8 (compiled to BOC)
-**Total Tests:** 29 (all passing)
+**Total Tests:** 42 (all passing)
 
 ---
 
@@ -21,11 +21,22 @@
 ### Phase 2 — Full Protocol Suite (Complete)
 | Contract | Source (Solidity) | Tact File | BOC | Tests |
 |---|---|---|---|---|
-| VaultHub | `VaultHub.sol` (1,769 lines) | `contracts/VaultHub.tact` | ✅ | 8 |
+| VaultHub | `VaultHub.sol` (1,769 lines) | `contracts/VaultHub.tact` | ✅ | 8 + 13 economics |
 | VaultFactory | `VaultFactory.sol` (184 lines) | `contracts/VaultFactory.tact` | ✅ | 3 |
 | Dashboard | `Dashboard.sol` (827 lines) | `contracts/Dashboard.tact` | ✅ | 5 |
 | OperatorGrid | `OperatorGrid.sol` (904 lines) | `contracts/OperatorGrid.tact` | ✅ | 3 |
 | LazyOracle | `LazyOracle.sol` (685 lines) | `contracts/LazyOracle.tact` | ✅ | 3 |
+
+---
+
+### Phase 3 — Economic Layer (Complete)
+| Feature | Description | Tests |
+|---|---|---|
+| MintShares | Mint shares against vault collateral with reserve ratio check | 6 |
+| BurnShares | Burn shares to reduce vault liabilities | 2 |
+| Fee accrual | infraFeeBP deducted on each mint, accumulated per vault | 2 |
+| Oracle freshness | Minting rejected if reportTimestamp is 0 or stale (>2 days) | 1 |
+| Bad debt detection | `has_bad_debt` getter: totalValue < liabilityShares | 2 |
 
 ---
 
@@ -90,6 +101,21 @@ User → VaultFactory.CreateVault()
 - Dashboard role-based access and forwarding (4 tests)
 - **Full end-to-end lifecycle** (1 test covering all contracts)
 - Connection parameter updates (1 test)
+
+### `tests/economics.test.ts` — 13 tests
+- Mint shares against funded vault (happy path)
+- Mint rejected when undercollateralized
+- Mint rejected when oracle report stale (no report)
+- Bad debt detection after value drop via oracle report
+- No bad debt when value exceeds liabilities
+- Fee accrual on mint (infraFeeBP)
+- Fee accumulation across multiple mints
+- Reserve ratio enforcement at exact boundary
+- Max liability cap enforcement (shareLimit)
+- Burn shares reduces liabilities and totalSharesMinted
+- Cannot burn more shares than liability
+- Mint rejected when hub is paused
+- Non-admin cannot mint shares
 
 ---
 
