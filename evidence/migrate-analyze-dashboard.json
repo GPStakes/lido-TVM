@@ -1,0 +1,70 @@
+{
+  "success": true,
+  "file": "/tmp/lido-core/contracts/0.8.25/vaults/dashboard/Dashboard.sol",
+  "sourceLanguage": "solidity",
+  "features": [
+    "Events",
+    "Modifiers",
+    "Interfaces",
+    "Inheritance",
+    "Inline Assembly"
+  ],
+  "complexity": "high",
+  "warnings": [
+    "TON has no inheritance — use composition",
+    "Inline assembly must be completely rewritten for TVM",
+    "Large contract — consider splitting into multiple TON contracts"
+  ],
+  "mappings": [
+    {
+      "source": "mapping(address => uint)",
+      "tonEquivalent": "Dictionary (HashmapE)",
+      "notes": "Use 256-bit keys for addresses"
+    },
+    {
+      "source": "msg.sender",
+      "tonEquivalent": "sender_address (from msg)",
+      "notes": "Parse from incoming internal message"
+    },
+    {
+      "source": "msg.value",
+      "tonEquivalent": "msg_value (from msg)",
+      "notes": "Available in message context"
+    },
+    {
+      "source": "require()",
+      "tonEquivalent": "throw_unless()",
+      "notes": "Custom exit codes instead of strings"
+    },
+    {
+      "source": "modifier",
+      "tonEquivalent": "inline function checks",
+      "notes": "No modifier syntax; use helper functions"
+    },
+    {
+      "source": "event",
+      "tonEquivalent": "External messages / logs",
+      "notes": "Use outgoing messages or external message logs"
+    },
+    {
+      "source": "ERC-20",
+      "tonEquivalent": "TEP-74 (Jetton)",
+      "notes": "Different architecture: master + wallet contracts"
+    },
+    {
+      "source": "ERC-721",
+      "tonEquivalent": "TEP-62 (NFT)",
+      "notes": "Collection + individual item contracts"
+    },
+    {
+      "source": "inheritance",
+      "tonEquivalent": "No inheritance",
+      "notes": "Use composition. Each contract is standalone."
+    },
+    {
+      "source": "try/catch",
+      "tonEquivalent": "TRYARGS/TRY opcodes",
+      "notes": "Available in TVM but used differently"
+    }
+  ]
+}

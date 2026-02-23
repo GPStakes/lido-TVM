@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "file": "/tmp/lido-core/contracts/0.8.25/vaults/VaultFactory.sol",
+  "from": "solidity",
+  "to": "tact",
+  "output": "evidence/generated/VaultFactory.tact",
+  "notes": "evidence/generated/MIGRATION_NOTES.md"
+}
