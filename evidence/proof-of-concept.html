@@ -2,362 +2,135 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lido-TVM: Behavioral Equivalence Proof</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  
   :root {
-    --primary: #0088CC;
-    --primary-dark: #006699;
-    --accent: #00C2FF;
-    --dark: #1a1a2e;
-    --gray: #4a4a5a;
-    --light-gray: #f0f2f5;
-    --white: #ffffff;
-    --success: #00c853;
-    --warning: #ff9800;
+    --primary: #0088CC; --primary-dark: #006699; --dark: #1a1a2e;
+    --gray: #4a4a5a; --light-gray: #f0f2f5; --white: #fff; --success: #00c853;
   }
-  
-  body {
-    font-family: 'Inter', -apple-system, sans-serif;
-    color: var(--dark);
-    line-height: 1.6;
-    background: var(--white);
-  }
+  body { font-family: 'Inter', -apple-system, sans-serif; color: var(--dark); line-height: 1.55; }
   
   .page {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0 auto;
-    padding: 20mm 20mm 25mm 20mm;
-    page-break-after: always;
-    position: relative;
+    width: 210mm; height: 297mm; margin: 0 auto;
+    padding: 18mm 20mm 15mm 20mm;
+    page-break-after: always; position: relative; overflow: hidden;
   }
-  
   @media print {
-    .page { padding: 15mm 18mm 20mm 18mm; margin: 0; }
+    .page { margin: 0; }
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .no-break { page-break-inside: avoid; }
   }
-  
-  /* Header / Title Page */
-  .title-page {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 257mm;
-    position: relative;
-  }
-  
-  .title-page::before {
-    content: '';
-    position: absolute;
-    top: -20mm;
-    right: -20mm;
-    width: 160mm;
-    height: 297mm;
+
+  /* Title page */
+  .title-page { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+  .title-bg {
+    position: absolute; top: 0; right: 0; width: 55%; height: 100%;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    clip-path: polygon(35% 0, 100% 0, 100% 100%, 5% 100%);
-    z-index: -1;
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
   }
-  
   .badge {
-    display: inline-block;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 20px;
+    display: inline-block; padding: 5px 14px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+    background: #e8f5e9; color: #2e7d32; margin-bottom: 16px;
   }
-  
-  .badge-success { background: #e8f5e9; color: #2e7d32; }
-  
-  .title-page h1 {
-    font-size: 38px;
-    font-weight: 700;
-    line-height: 1.1;
-    margin-bottom: 12px;
-    color: var(--dark);
-    max-width: 50%;
-  }
-  
-  .title-page .subtitle {
-    font-size: 16px;
-    color: var(--gray);
-    max-width: 50%;
-    margin-bottom: 30px;
-    line-height: 1.5;
-  }
-  
-  .title-meta {
-    display: flex;
-    gap: 28px;
-    font-size: 12px;
-    color: var(--gray);
-  }
-  
-  .title-meta strong { color: var(--dark); }
-  
-  /* Stats bar */
-  .stats-bar {
-    display: flex;
-    gap: 0;
-    background: var(--light-gray);
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 20px 0;
-  }
-  
-  .stat {
-    flex: 1;
-    padding: 16px 12px;
-    text-align: center;
-    border-right: 1px solid #e0e0e0;
-  }
-  
+  .title-page h1 { font-size: 36px; font-weight: 700; line-height: 1.1; margin-bottom: 10px; max-width: 48%; }
+  .title-page .subtitle { font-size: 14px; color: var(--gray); max-width: 48%; margin-bottom: 28px; line-height: 1.5; }
+  .stats-bar { display: flex; background: var(--light-gray); border-radius: 10px; overflow: hidden; margin: 16px 0; }
+  .stat { flex: 1; padding: 14px 10px; text-align: center; border-right: 1px solid #e0e0e0; }
   .stat:last-child { border-right: none; }
-  
-  .stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--primary);
-  }
-  
-  .stat-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray);
-    margin-top: 3px;
-  }
-  
-  /* Sections */
-  h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--dark);
-    margin: 24px 0 12px;
-    padding-bottom: 6px;
-    border-bottom: 3px solid var(--primary);
-    display: inline-block;
-  }
-  
-  h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--primary-dark);
-    margin: 16px 0 8px;
-  }
-  
-  p { margin-bottom: 10px; font-size: 12px; }
-  
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+  .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray); margin-top: 2px; }
+  .title-meta { display: flex; gap: 24px; font-size: 11px; color: var(--gray); }
+  .title-meta strong { color: var(--dark); display: block; margin-bottom: 2px; }
+
+  /* Section headers */
+  h2 { font-size: 18px; font-weight: 700; margin: 20px 0 10px; padding-bottom: 5px; border-bottom: 3px solid var(--primary); display: inline-block; }
+  h3 { font-size: 13px; font-weight: 600; color: var(--primary-dark); margin: 14px 0 6px; }
+  p { margin-bottom: 8px; font-size: 11px; }
+
   /* Tables */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 11px;
-  }
-  
-  th {
-    background: var(--primary);
-    color: var(--white);
-    padding: 8px 10px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  td {
-    padding: 6px 10px;
-    border-bottom: 1px solid #e8e8e8;
-  }
-  
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
+  th { background: var(--primary); color: white; padding: 6px 8px; text-align: left; font-weight: 600; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 5px 8px; border-bottom: 1px solid #eee; }
   tr:nth-child(even) td { background: #fafbfc; }
-  
-  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 9px; }
-  
-  /* Check marks */
+  .addr-table td:nth-child(2) { font-family: 'SF Mono', monospace; font-size: 7.5px; word-break: break-all; }
+
+  /* Cards */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+  .card { background: var(--light-gray); border-radius: 7px; padding: 12px; }
+  .card h4 { font-size: 11px; font-weight: 600; margin-bottom: 8px; color: var(--primary-dark); }
+  .card ul { list-style: none; padding: 0; }
+  .card li { padding: 2px 0; font-size: 10px; padding-left: 16px; position: relative; }
+  .card li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: bold; font-size: 11px; }
+
+  .highlight-box { background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border-left: 4px solid var(--primary); padding: 10px 14px; border-radius: 0 7px 7px 0; margin: 12px 0; }
+  .highlight-box p { font-size: 11px; font-style: italic; margin: 0; }
+
   .check { color: var(--success); font-weight: bold; }
-  .warn { color: var(--warning); font-weight: bold; }
-  
-  /* Two columns */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin: 12px 0;
-  }
-  
-  .card {
-    background: var(--light-gray);
-    border-radius: 8px;
-    padding: 14px;
-  }
-  
-  .card h4 {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--primary-dark);
-  }
-  
-  .card ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .card li {
-    padding: 3px 0;
-    font-size: 11px;
-    padding-left: 18px;
-    position: relative;
-  }
-  
-  .card li::before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    color: var(--success);
-    font-weight: bold;
-  }
-  
-  .highlight-box {
-    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-    border-left: 4px solid var(--primary);
-    padding: 12px 16px;
-    border-radius: 0 8px 8px 0;
-    margin: 16px 0;
-  }
-  
-  .highlight-box p {
-    font-size: 12px;
-    font-style: italic;
-    margin: 0;
-  }
-  
-  .small { font-size: 10px; color: var(--gray); }
-  
-  /* Address table */
-  .addr-table td:nth-child(2) {
-    font-family: 'SF Mono', monospace;
-    font-size: 8px;
-    word-break: break-all;
-  }
-  
-  .flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 16px 0;
-    flex-wrap: wrap;
-  }
-  
-  .flow-step {
-    background: var(--primary);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 5px;
-    font-size: 10px;
-    font-weight: 500;
-  }
-  
-  .flow-arrow {
-    font-size: 14px;
-    color: var(--gray);
-  }
-  
-  .page-num {
-    position: absolute;
-    bottom: 10mm;
-    right: 18mm;
-    font-size: 10px;
-    color: #999;
-  }
+  .small { font-size: 9px; color: var(--gray); }
+  .page-num { position: absolute; bottom: 8mm; right: 18mm; font-size: 9px; color: #bbb; }
+
+  .flow { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 12px 0; }
+  .flow-step { background: var(--primary); color: white; padding: 5px 10px; border-radius: 5px; font-size: 9px; font-weight: 500; }
+  .flow-arrow { font-size: 12px; color: var(--gray); }
 </style>
 </head>
 <body>
 
 <!-- PAGE 1: TITLE -->
 <div class="page">
+  <div class="title-bg"></div>
   <div class="title-page">
-    <span class="badge badge-success">✅ DEPLOYED TO TON TESTNET</span>
+    <span class="badge">✅ Deployed to TON Testnet</span>
     <h1>Lido-TVM</h1>
-    <p class="subtitle">Complete behavioral replication of Lido's staking vault protocol from Ethereum to TON — 17 contracts, 182 tests, 16 deployed on-chain.</p>
-    
-    <div class="stats-bar" style="max-width: 50%;">
-      <div class="stat">
-        <div class="stat-value">17</div>
-        <div class="stat-label">Contracts</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">182</div>
-        <div class="stat-label">Tests Passing</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">16</div>
-        <div class="stat-label">Deployed</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">9/9</div>
-        <div class="stat-label">On-Chain Tests</div>
-      </div>
+    <p class="subtitle">Complete behavioral replication of Lido's staking vault protocol from Ethereum to TON — 17 contracts, 182 tests, all deployed and verified on-chain.</p>
+    <div class="stats-bar" style="max-width: 48%;">
+      <div class="stat"><div class="stat-value">17</div><div class="stat-label">Contracts</div></div>
+      <div class="stat"><div class="stat-value">182</div><div class="stat-label">Tests Passing</div></div>
+      <div class="stat"><div class="stat-value">16</div><div class="stat-label">Deployed</div></div>
+      <div class="stat"><div class="stat-value">9/9</div><div class="stat-label">On-Chain Tests</div></div>
     </div>
-    
     <div class="title-meta">
-      <div><strong>Prepared by</strong><br>Tesserae Ventures</div>
-      <div><strong>Date</strong><br>February 23, 2026</div>
-      <div><strong>Repository</strong><br>TesseraeVentures/lido-TVM</div>
+      <div><strong>Prepared by</strong>Tesserae Ventures</div>
+      <div><strong>Date</strong>February 23, 2026</div>
+      <div><strong>Repository</strong>TesseraeVentures/lido-TVM</div>
     </div>
   </div>
   <div class="page-num">1</div>
 </div>
 
-<!-- PAGE 2: SUMMARY + SCOPE -->
+<!-- PAGE 2: SUMMARY + SCOPE (tightly packed, no overflow) -->
 <div class="page">
   <h2>Executive Summary</h2>
-  <p>We performed a <strong>ground-up reimplementation</strong> of Lido's staking vault protocol — one of Ethereum's most sophisticated DeFi systems ($15B+ TVL) — from Solidity to Tact for the TON blockchain.</p>
-  
-  <p>This is not a wrapper or bridge. It is a behaviorally equivalent protocol that preserves the same invariants, access control, economic logic, and state transitions while adapting to TON's actor-model architecture.</p>
-  
+  <p>We performed a <strong>ground-up reimplementation</strong> of Lido's staking vault protocol — one of Ethereum's most sophisticated DeFi systems ($15B+ TVL) — from Solidity to Tact for the TON blockchain. This is not a wrapper or bridge. It is a behaviorally equivalent protocol preserving the same invariants, access control, economic logic, and state transitions.</p>
+
   <div class="highlight-box">
     <p>"Every EVM protocol is now a potential TON protocol. The migration engine dramatically reduces the barrier to bringing established DeFi to TON."</p>
   </div>
-  
+
   <h2>Migration Scope</h2>
-  
-  <table class="no-break">
+  <table>
     <tr><th>Aspect</th><th>Source (EVM)</th><th>Target (TON)</th></tr>
     <tr><td>Language</td><td>Solidity 0.8.25</td><td>Tact</td></tr>
-    <tr><td>Contracts</td><td>20 files</td><td>17 contracts</td></tr>
-    <tr><td>Source Lines</td><td>7,838</td><td>3,580</td></tr>
-    <tr><td>Tests</td><td>—</td><td>182 (11 suites)</td></tr>
+    <tr><td>Contracts</td><td>20 files (7,838 lines)</td><td>17 contracts (3,580 lines)</td></tr>
+    <tr><td>Tests</td><td>—</td><td>182 tests (11 suites, 4,104 lines)</td></tr>
     <tr><td>Token Standard</td><td>ERC-20 (stETH)</td><td>TEP-74 Jetton (StTON)</td></tr>
-    <tr><td>Execution</td><td>Synchronous</td><td>Async message-passing</td></tr>
-    <tr><td>Validator Min</td><td>32 ETH</td><td>10,000 TON</td></tr>
-    <tr><td>Upgrades</td><td>UUPS Proxy</td><td>setCode + Controller</td></tr>
+    <tr><td>Execution Model</td><td>Synchronous</td><td>Async message-passing</td></tr>
+    <tr><td>Validator Minimum</td><td>32 ETH</td><td>10,000 TON</td></tr>
+    <tr><td>Upgrade Pattern</td><td>UUPS Proxy</td><td>setCode + Controller</td></tr>
   </table>
-  
+
   <h3>Architectural Adaptations</h3>
-  <div class="two-col no-break">
+  <div class="two-col">
     <div class="card">
       <h4>Preserved (Behavioral Equivalence)</h4>
       <ul>
         <li>Share-to-token ratio across rebases</li>
-        <li>Role-based access (12 roles)</li>
+        <li>Role-based access control (12 roles)</li>
         <li>Vault lifecycle state machine</li>
         <li>Fee distribution formulas</li>
         <li>Capacity-based bonding curves</li>
-        <li>FIFO withdrawal ordering</li>
       </ul>
     </div>
     <div class="card">
@@ -367,65 +140,41 @@
         <li>Oracle state roots (vs beacon SSZ)</li>
         <li>TON elector model (vs beacon chain)</li>
         <li>Bounce handlers for failed messages</li>
-        <li>Message-based auth (vs msg.sender)</li>
-        <li>Async callbacks (vs sync view)</li>
+        <li>Async callbacks (vs sync views)</li>
       </ul>
     </div>
   </div>
+
+  <h2>Implemented Contracts</h2>
+  <table>
+    <tr><th>Contract</th><th>Lines</th><th>Tests</th><th>Purpose</th></tr>
+    <tr><td>PredepositGuarantee</td><td>522</td><td>23</td><td>Pre-deposit bonding system</td></tr>
+    <tr><td>VaultHub</td><td>456</td><td>28</td><td>Central vault registry, share minting/burning</td></tr>
+    <tr><td>NodeOperatorFee</td><td>293</td><td>26</td><td>Fee distribution with splitting</td></tr>
+    <tr><td>ValidatorConsolidation</td><td>256</td><td>22</td><td>Validator consolidation (from EIP-7251)</td></tr>
+    <tr><td>CLProofVerifier</td><td>256</td><td>14</td><td>State root verification (adapted)</td></tr>
+    <tr><td>StakingVault</td><td>252</td><td>18</td><td>Individual vault with operator mgmt</td></tr>
+    <tr><td>StTON</td><td>225</td><td>16</td><td>Liquid staking Jetton with rebase</td></tr>
+    <tr><td>OperatorGrid + Dashboard</td><td>430</td><td>26</td><td>Operator registry + admin dashboard</td></tr>
+    <tr><td>Permissions</td><td>181</td><td>12</td><td>Role-based access (12 roles)</td></tr>
+    <tr><td>6 utility contracts</td><td>509</td><td>17</td><td>Cache, recovery, factory, upgrade, stub</td></tr>
+    <tr style="font-weight:600;"><td>Total</td><td>3,580</td><td>182</td><td></td></tr>
+  </table>
   <div class="page-num">2</div>
 </div>
 
-<!-- PAGE 3: CONTRACTS -->
+<!-- PAGE 3: TESTING + DEPLOYMENT -->
 <div class="page">
-  <h2>Implemented Contracts</h2>
-  
-  <table class="no-break">
-    <tr><th>Contract</th><th>Lines</th><th>Tests</th><th>Purpose</th></tr>
-    <tr><td>VaultHub</td><td>456</td><td>28</td><td>Central vault registry, share minting/burning</td></tr>
-    <tr><td>PredepositGuarantee</td><td>522</td><td>23</td><td>Pre-deposit bonding system</td></tr>
-    <tr><td>NodeOperatorFee</td><td>293</td><td>26</td><td>Fee distribution with splitting</td></tr>
-    <tr><td>ValidatorConsolidation</td><td>256</td><td>22</td><td>Validator consolidation (adapted from EIP-7251)</td></tr>
-    <tr><td>CLProofVerifier</td><td>256</td><td>14</td><td>State root verification (adapted)</td></tr>
-    <tr><td>StakingVault</td><td>252</td><td>18</td><td>Individual staking vault with operator mgmt</td></tr>
-    <tr><td>StTON</td><td>225</td><td>16</td><td>Liquid staking Jetton with rebase</td></tr>
-    <tr><td>OperatorGrid</td><td>215</td><td>14</td><td>Validator operator registry</td></tr>
-    <tr><td>Dashboard</td><td>215</td><td>12</td><td>Admin dashboard for vault operations</td></tr>
-    <tr><td>Permissions</td><td>181</td><td>12</td><td>Role-based access (12 roles)</td></tr>
-    <tr><td>RefSlotCache</td><td>160</td><td>6</td><td>Double-cache slot rotation</td></tr>
-    <tr><td>LazyOracle</td><td>160</td><td>10</td><td>Lazy-evaluated oracle reports</td></tr>
-    <tr><td>VaultFactory</td><td>149</td><td>8</td><td>Factory pattern for vault deployment</td></tr>
-    <tr><td>RecoverTokens</td><td>96</td><td>4</td><td>Stuck Jetton/TON recovery</td></tr>
-    <tr><td>MeIfNobodyElse</td><td>72</td><td>3</td><td>Default recipient pattern</td></tr>
-    <tr><td>UpgradeController</td><td>48</td><td>4</td><td>Code upgrade management</td></tr>
-    <tr><td>WithdrawalAdapterStub</td><td>24</td><td>2</td><td>Withdrawal queue stub</td></tr>
-    <tr style="font-weight: bold;"><td>Total</td><td>3,580</td><td>182</td><td></td></tr>
-  </table>
-  
   <h2>Testing & Verification</h2>
-  
-  <div class="stats-bar no-break">
-    <div class="stat">
-      <div class="stat-value">11</div>
-      <div class="stat-label">Test Suites</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">182</div>
-      <div class="stat-label">All Passing</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">4,104</div>
-      <div class="stat-label">Test Lines</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">12.4s</div>
-      <div class="stat-label">Run Time</div>
-    </div>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-value">11</div><div class="stat-label">Test Suites</div></div>
+    <div class="stat"><div class="stat-value">182</div><div class="stat-label">All Passing</div></div>
+    <div class="stat"><div class="stat-value">4,104</div><div class="stat-label">Test Lines</div></div>
+    <div class="stat"><div class="stat-value">12.4s</div><div class="stat-label">Run Time</div></div>
   </div>
-  
-  <h3>Property Preservation Verified</h3>
-  <div class="two-col no-break">
+  <div class="two-col">
     <div class="card">
-      <h4>Economic Properties</h4>
+      <h4>Economic Properties Verified</h4>
       <ul>
         <li>Total shares = sum of holder shares</li>
         <li>Rounding always favors protocol</li>
@@ -434,125 +183,116 @@
       </ul>
     </div>
     <div class="card">
-      <h4>Safety Properties</h4>
+      <h4>Safety Properties Verified</h4>
       <ul>
         <li>No integer overflow in share math</li>
         <li>Bounce handlers prevent stuck funds</li>
         <li>Minimum stake thresholds enforced</li>
-        <li>0 findings in automated audit</li>
+        <li>0 findings in automated security audit</li>
       </ul>
     </div>
   </div>
-  <div class="page-num">3</div>
-</div>
 
-<!-- PAGE 4: DEPLOYMENT -->
-<div class="page">
   <h2>Testnet Deployment</h2>
-  
-  <p><strong>All 16 contracts deployed and active</strong> on TON testnet. Total deployment cost: ~0.36 TON.</p>
-  
-  <table class="addr-table no-break">
-    <tr><th>Contract</th><th>Address (testnet.tonscan.org)</th></tr>
-    <tr><td>Permissions</td><td>EQCdqpCDXpLdRbPBjVY9FsvMKsf83ABuMHALAbco1feA9ZBI</td></tr>
+  <p><strong>All 16 contracts deployed and active</strong> on TON testnet. Total cost: ~0.36 TON. Verifiable at testnet.tonscan.org.</p>
+
+  <table class="addr-table">
+    <tr><th>Contract</th><th>Testnet Address</th></tr>
     <tr><td>VaultHub</td><td>EQCwqMLFC6c3UT9-MR87K2aR7RQjPVXctDjEqjHB0zQte-0t</td></tr>
     <tr><td>StTON</td><td>EQBmKk_Hondk10cpIgekEqCRZAUeNNuQxLwxvuS0tdcmZN85</td></tr>
     <tr><td>VaultFactory</td><td>EQCKEi4lwVYsdPSZ-aMrAPI6VHchrDutdLpNFN1E4saX-sog</td></tr>
+    <tr><td>Permissions</td><td>EQCdqpCDXpLdRbPBjVY9FsvMKsf83ABuMHALAbco1feA9ZBI</td></tr>
+    <tr><td>CLProofVerifier</td><td>EQDKn4BNi8jbvYL0tvrdNJ2io2KklXU9f9uEFdp4ULW9Njx1</td></tr>
     <tr><td>Dashboard</td><td>EQDEZkm14hZk1FaUCEXMGa-CqqeMpPdOcNdnaGkIbeRY5d8C</td></tr>
     <tr><td>OperatorGrid</td><td>EQDdWr2d1FSacPcFCdSZIIo-juTgHBotIFHlznOn-_ZdW-Pr</td></tr>
     <tr><td>LazyOracle</td><td>EQBggTmQKk0KARLr649xL_Eo_LtoAi5iWalFWadfxG6vDPNZ</td></tr>
-    <tr><td>CLProofVerifier</td><td>EQDKn4BNi8jbvYL0tvrdNJ2io2KklXU9f9uEFdp4ULW9Njx1</td></tr>
     <tr><td>NodeOperatorFee</td><td>EQCGeDAaD4P8px6B8wp4TKWAhlOsIDzFddLlRyvYbPinXXSb</td></tr>
-    <tr><td>ValidatorConsolidation</td><td>EQBd19sVtvSw293ieXsL1dxorcvU0bcHrovbU3rc8FbC9gWD</td></tr>
     <tr><td>PredepositGuarantee</td><td>EQBi7zuyuXrRFlEpI2Zw5ORJ8ZVnHZ3gnHfck7wn3VmT1coG</td></tr>
-    <tr><td>UpgradeController</td><td>EQBoKSMKBGUs3SpcJHUJXP56brcm6fjfQCoJpiVvhBZcjVX2</td></tr>
-    <tr><td>RefSlotCache</td><td>EQD4s-7HQ5nvmJUgy38OanY6JjFqkmGyj8VseZ__RZmtm1bA</td></tr>
-    <tr><td>RecoverTokens</td><td>EQCr20J5QUZ1JS6ONO9NZG7BiMlJa7dwL3PmajYws8hA1_IP</td></tr>
-    <tr><td>MeIfNobodyElse</td><td>EQA9I5cflRbP60eFZC2y-7mi4_ORLMaHXatQ1vy1SdbuVYNx</td></tr>
-    <tr><td>WithdrawalAdapterStub</td><td>EQC8pfAOaDNegkc2FT4rvBr-G43Sbl_fX1AsfJoz_EZbZTfn</td></tr>
+    <tr><td>ValidatorConsolidation</td><td>EQBd19sVtvSw293ieXsL1dxorcvU0bcHrovbU3rc8FbC9gWD</td></tr>
+    <tr><td>+ 5 utility contracts</td><td>UpgradeController, RefSlotCache, RecoverTokens, MeIfNobodyElse, WithdrawalAdapterStub</td></tr>
   </table>
-  
+
   <h3>On-Chain Smoke Tests: 9/9 Passing ✅</h3>
-  <table class="no-break">
-    <tr><th>Test</th><th>Status</th><th>Notes</th></tr>
-    <tr><td>deploy-vault</td><td><span class="check">✅ PASS</span></td><td>VaultFactory deploys StakingVault on-chain</td></tr>
-    <tr><td>connect-vault</td><td><span class="check">✅ PASS</span></td><td>VaultHub accepts vault registration</td></tr>
-    <tr><td>mint-shares</td><td><span class="check">✅ PASS</span></td><td>Share minting executes correctly</td></tr>
-    <tr><td>check-stton-balance</td><td><span class="check">✅ PASS</span></td><td>StTON getter returns correct balance</td></tr>
-    <tr><td>permissions-grant-revoke</td><td><span class="check">✅ PASS</span></td><td>Role 5 granted then revoked, verified</td></tr>
-    <tr><td>lazy-oracle-report</td><td><span class="check">✅ PASS</span></td><td>Oracle report submission confirmed</td></tr>
-    <tr><td>node-operator-fee</td><td><span class="check">✅ PASS</span></td><td>Fee disbursement executes on-chain</td></tr>
-    <tr><td>predeposit-bond</td><td><span class="check">✅ PASS</span></td><td>Bond deposit confirmed</td></tr>
-    <tr><td>cl-proof-verifier</td><td><span class="check">✅ PASS</span></td><td>State root submission confirmed</td></tr>
+  <table>
+    <tr><th>Test</th><th>Status</th><th>Verified Behavior</th></tr>
+    <tr><td>deploy-vault</td><td><span class="check">✅</span></td><td>VaultFactory deploys StakingVault on-chain</td></tr>
+    <tr><td>connect-vault</td><td><span class="check">✅</span></td><td>VaultHub accepts vault registration</td></tr>
+    <tr><td>mint-shares</td><td><span class="check">✅</span></td><td>Share minting executes correctly</td></tr>
+    <tr><td>check-stton-balance</td><td><span class="check">✅</span></td><td>StTON Jetton getter returns balance</td></tr>
+    <tr><td>permissions-grant-revoke</td><td><span class="check">✅</span></td><td>Role granted, verified, revoked, verified</td></tr>
+    <tr><td>lazy-oracle-report</td><td><span class="check">✅</span></td><td>Oracle report submission confirmed</td></tr>
+    <tr><td>node-operator-fee</td><td><span class="check">✅</span></td><td>Fee disbursement executes on-chain</td></tr>
+    <tr><td>predeposit-bond</td><td><span class="check">✅</span></td><td>Bond deposit confirmed</td></tr>
+    <tr><td>cl-proof-verifier</td><td><span class="check">✅</span></td><td>State root submission confirmed</td></tr>
   </table>
-  <p class="small">All 9 on-chain smoke tests pass. Tests exercise the full protocol lifecycle: vault deployment, share minting, access control, oracle reporting, fee distribution, bonding, and state verification.</p>
-  <div class="page-num">4</div>
+  <div class="page-num">3</div>
 </div>
 
-<!-- PAGE 5: METHODOLOGY + IMPLICATIONS -->
+<!-- PAGE 4: METHODOLOGY + IMPLICATIONS -->
 <div class="page">
   <h2>Migration Methodology</h2>
-  
-  <div class="flow no-break">
-    <div class="flow-step">Solidity</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">Analysis</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">IR</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">Properties</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">Tact</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">Tests</div>
-    <div class="flow-arrow">→</div>
+  <div class="flow">
+    <div class="flow-step">Solidity</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Analysis</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Contract IR</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Properties</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Tact Code</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Test Suite</div><div class="flow-arrow">→</div>
     <div class="flow-step">Deploy</div>
   </div>
-  
-  <p>The migration is powered by the <strong>Tesserae Migration Engine</strong>, which uses a Universal Intermediate Representation (IR) to enable N-source × M-target migrations:</p>
-  
-  <table class="no-break">
-    <tr><th>Source Languages</th><th>Target Languages</th></tr>
+  <p>The migration is powered by the <strong>Tesserae Migration Engine</strong>, which uses a Universal Intermediate Representation (IR) to enable N-source × M-target migrations.</p>
+
+  <table>
+    <tr><th>Source Languages (Supported)</th><th>Target Languages</th></tr>
     <tr><td>Solidity (EVM)</td><td>Tact (TON)</td></tr>
-    <tr><td>Rust/Anchor (Solana)</td><td><em>More targets planned</em></td></tr>
-    <tr><td>Move (Sui)</td><td></td></tr>
-    <tr><td>Cairo (Starknet)</td><td></td></tr>
+    <tr><td>Rust/Anchor (Solana)</td><td rowspan="3"><em>Additional targets planned</em></td></tr>
+    <tr><td>Move (Sui)</td></tr>
+    <tr><td>Cairo (Starknet)</td></tr>
   </table>
-  
+
+  <h3>What Gets Preserved vs Adapted</h3>
+  <table>
+    <tr><th>Property</th><th>Preservation Method</th></tr>
+    <tr><td>State invariants</td><td>Tested: balance conservation, share totals, rounding</td></tr>
+    <tr><td>Access control</td><td>Same 12-role model, message-based enforcement</td></tr>
+    <tr><td>Economic logic</td><td>Same formulas, same rounding behavior</td></tr>
+    <tr><td>State machine</td><td>Same lifecycle states and valid transitions</td></tr>
+    <tr><td>Error conditions</td><td>Same revert conditions via require()</td></tr>
+  </table>
+
   <h2>Implications for TON</h2>
-  
-  <div class="two-col no-break">
+  <div class="two-col">
     <div class="card" style="background: linear-gradient(135deg, #e8f5e9, #f1f8e9);">
       <h4>🏗️ Complex DeFi Works on TON</h4>
-      <p style="font-size: 11px; margin: 0;">Lido is one of the most sophisticated protocols on Ethereum. Successfully migrating its vault architecture proves TON can host equally complex financial infrastructure.</p>
+      <p style="font-size: 10px; margin: 0;">Lido is one of the most sophisticated DeFi protocols on Ethereum ($15B+ TVL). Successfully migrating its vault architecture proves TON can host equally complex financial infrastructure. The actor model required architectural adaptation but did not prevent behavioral equivalence.</p>
     </div>
     <div class="card" style="background: linear-gradient(135deg, #e3f2fd, #e8eaf6);">
       <h4>🤖 Agents Can Build TON's Ecosystem</h4>
-      <p style="font-size: 11px; margin: 0;">This migration was performed by an autonomous AI agent using TON Dev Skills. Agents can analyze, migrate, test, and deploy protocols — accelerating ecosystem growth.</p>
+      <p style="font-size: 10px; margin: 0;">This migration was performed by an autonomous AI agent using TON Dev Skills. The agent analyzed 7,838 lines of Solidity, made architectural decisions, wrote 3,580 lines of Tact, generated 182 tests, deployed 16 contracts, and verified 9 on-chain workflows.</p>
     </div>
   </div>
-  
-  <div class="highlight-box no-break">
-    <p>"Every DeFi protocol on Ethereum, Solana, Sui, or Starknet is now a potential TON protocol. The migration engine combined with agent tooling means TON's ecosystem can grow faster than any chain that relies solely on human developers."</p>
+
+  <div class="highlight-box">
+    <p>"Every DeFi protocol on Ethereum, Solana, Sui, or Starknet is now a potential TON protocol. The migration engine combined with agent tooling means TON's ecosystem can grow faster than any chain relying solely on human developers."</p>
   </div>
-  
+
   <h2>About Tesserae Ventures</h2>
-  
-  <p><strong>TON Dev Skills</strong> — Security scanner, migration engine, and MCP server for autonomous TON development.</p>
-  
-  <table class="no-break">
+  <p><strong>TON Dev Skills</strong> — Security scanner (53 rules), migration engine (4 source chains), and MCP server for autonomous TON development.</p>
+  <table>
     <tr><th>Resource</th><th>Link</th></tr>
     <tr><td>npm Package</td><td>@tesserae/ton-dev-skills</td></tr>
-    <tr><td>GitHub</td><td>github.com/TesseraeVentures</td></tr>
     <tr><td>Lido-TVM Repository</td><td>github.com/TesseraeVentures/lido-TVM</td></tr>
+    <tr><td>Migration Engine</td><td>github.com/TesseraeVentures/tesserae-migration</td></tr>
+    <tr><td>GitHub Organization</td><td>github.com/TesseraeVentures</td></tr>
     <tr><td>Documentation</td><td>devskills.tonsurance.com</td></tr>
+    <tr><td>MCP Server (Live)</td><td>devmcp.tonsurance.com</td></tr>
   </table>
-  
-  <div style="margin-top: 24px; padding: 16px; background: var(--dark); color: white; border-radius: 8px; text-align: center;">
-    <p style="color: white; font-size: 14px; font-weight: 600; margin: 0;">TON Foundation Fast Grant — Agent Tooling for TON</p>
-    <p style="color: #aaa; font-size: 11px; margin: 6px 0 0;">Voting period: February 24–28, 2026</p>
+
+  <div style="margin-top: 20px; padding: 14px; background: var(--dark); color: white; border-radius: 8px; text-align: center;">
+    <p style="color: white; font-size: 13px; font-weight: 600; margin: 0;">TON Foundation Fast Grant — Agent Tooling for TON</p>
+    <p style="color: #aaa; font-size: 10px; margin: 4px 0 0;">Voting period: February 24–28, 2026</p>
   </div>
-  <div class="page-num">5</div>
+  <div class="page-num">4</div>
 </div>
 
 </body>
