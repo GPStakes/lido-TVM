@@ -1,0 +1,62 @@
+{
+  "network": "testnet",
+  "timestamp": "2026-02-23T17:48:51.372Z",
+  "tests": [
+    {
+      "name": "deploy-vault",
+      "status": "FAIL",
+      "error": "Vault not active at EQBni67VDS3UM3E9zKzsp0SS9tGvXJt3B53l4tmzV9Huj0gk, state: uninitialized",
+      "durationMs": 41065
+    },
+    {
+      "name": "connect-vault",
+      "status": "PASS",
+      "durationMs": 11114
+    },
+    {
+      "name": "mint-shares",
+      "status": "FAIL",
+      "error": "Request failed with status code 500",
+      "durationMs": 8467
+    },
+    {
+      "name": "check-stton-balance",
+      "status": "PASS",
+      "durationMs": 177
+    },
+    {
+      "name": "permissions-grant-revoke",
+      "status": "FAIL",
+      "error": "Request failed with status code 429",
+      "durationMs": 29111
+    },
+    {
+      "name": "lazy-oracle-report",
+      "status": "FAIL",
+      "error": "Report not stored",
+      "durationMs": 13434
+    },
+    {
+      "name": "node-operator-fee-disburse",
+      "status": "PASS",
+      "durationMs": 12329
+    },
+    {
+      "name": "predeposit-guarantee-bond",
+      "status": "FAIL",
+      "error": "Request failed with status code 429",
+      "durationMs": 6684
+    },
+    {
+      "name": "cl-proof-verifier-set-root",
+      "status": "FAIL",
+      "error": "Request failed with status code 429",
+      "durationMs": 6700
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 6,
+    "total": 9
+  }
+}

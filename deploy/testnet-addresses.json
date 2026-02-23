@@ -1,0 +1,23 @@
+{
+  "network": "testnet",
+  "timestamp": "2026-02-23T17:42:32.305Z",
+  "deployer": "EQBkg6JGZ3m_JCyJy0DBKcR8A_fo8wel-NqWKlIBg6yi7GI5",
+  "contracts": {
+    "Permissions": "EQCdqpCDXpLdRbPBjVY9FsvMKsf83ABuMHALAbco1feA9ZBI",
+    "RefSlotCache": "EQD4s-7HQ5nvmJUgy38OanY6JjFqkmGyj8VseZ__RZmtm1bA",
+    "RecoverTokens": "EQCr20J5QUZ1JS6ONO9NZG7BiMlJa7dwL3PmajYws8hA1_IP",
+    "MeIfNobodyElse": "EQA9I5cflRbP60eFZC2y-7mi4_ORLMaHXatQ1vy1SdbuVYNx",
+    "CLProofVerifier": "EQDKn4BNi8jbvYL0tvrdNJ2io2KklXU9f9uEFdp4ULW9Njx1",
+    "WithdrawalAdapterStub": "EQC8pfAOaDNegkc2FT4rvBr-G43Sbl_fX1AsfJoz_EZbZTfn",
+    "UpgradeController": "EQBoKSMKBGUs3SpcJHUJXP56brcm6fjfQCoJpiVvhBZcjVX2",
+    "OperatorGrid": "EQDdWr2d1FSacPcFCdSZIIo-juTgHBotIFHlznOn-_ZdW-Pr",
+    "VaultHub": "EQCwqMLFC6c3UT9-MR87K2aR7RQjPVXctDjEqjHB0zQte-0t",
+    "StTON": "EQBmKk_Hondk10cpIgekEqCRZAUeNNuQxLwxvuS0tdcmZN85",
+    "LazyOracle": "EQBggTmQKk0KARLr649xL_Eo_LtoAi5iWalFWadfxG6vDPNZ",
+    "NodeOperatorFee": "EQCGeDAaD4P8px6B8wp4TKWAhlOsIDzFddLlRyvYbPinXXSb",
+    "ValidatorConsolidationRequests": "EQBd19sVtvSw293ieXsL1dxorcvU0bcHrovbU3rc8FbC9gWD",
+    "VaultFactory": "EQCKEi4lwVYsdPSZ-aMrAPI6VHchrDutdLpNFN1E4saX-sog",
+    "Dashboard": "EQDEZkm14hZk1FaUCEXMGa-CqqeMpPdOcNdnaGkIbeRY5d8C",
+    "PredepositGuarantee": "EQBi7zuyuXrRFlEpI2Zw5ORJ8ZVnHZ3gnHfck7wn3VmT1coG"
+  }
+}
