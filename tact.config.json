@@ -40,6 +40,11 @@
       "name": "lazy_oracle",
       "path": "contracts/LazyOracle.tact",
       "output": "build/lazy_oracle"
+    },
+    {
+      "name": "st_ton",
+      "path": "contracts/StTON.tact",
+      "output": "build/st_ton"
     }
   ]
 }
