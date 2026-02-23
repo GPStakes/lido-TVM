@@ -15,6 +15,31 @@
       "name": "withdrawal_adapter_stub",
       "path": "contracts/WithdrawalAdapterStub.tact",
       "output": "build/withdrawal_adapter_stub"
+    },
+    {
+      "name": "vault_hub",
+      "path": "contracts/VaultHub.tact",
+      "output": "build/vault_hub"
+    },
+    {
+      "name": "vault_factory",
+      "path": "contracts/VaultFactory.tact",
+      "output": "build/vault_factory"
+    },
+    {
+      "name": "dashboard",
+      "path": "contracts/Dashboard.tact",
+      "output": "build/dashboard"
+    },
+    {
+      "name": "operator_grid",
+      "path": "contracts/OperatorGrid.tact",
+      "output": "build/operator_grid"
+    },
+    {
+      "name": "lazy_oracle",
+      "path": "contracts/LazyOracle.tact",
+      "output": "build/lazy_oracle"
     }
   ]
 }
