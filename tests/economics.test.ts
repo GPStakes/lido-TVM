@@ -18,8 +18,9 @@ describe('VaultHub Economics', () => {
         oracle = await blockchain.treasury('oracle');
         recipient = await blockchain.treasury('recipient');
 
+        const stTONDummy = await blockchain.treasury('stTONDummy');
         vaultHub = blockchain.openContract(await VaultHub.fromInit(
-            admin.address, admin.address, oracle.address
+            admin.address, admin.address, oracle.address, stTONDummy.address
         ));
         await vaultHub.send(admin.getSender(), { value: toNano('0.1') }, { $$type: 'Deploy', queryId: 1n });
 

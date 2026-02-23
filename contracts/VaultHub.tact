@@ -105,10 +105,30 @@ struct VaultRecord {
     reportTimestamp: Int as uint48;
 }
 
+// ── StTON message types (must match StTON.tact) ──
+
+message(0x53544D54) StTONMint {
+    queryId: Int as uint64;
+    recipient: Address;
+    shareAmount: Int as coins;
+}
+
+message(0x53544252) StTONBurn {
+    queryId: Int as uint64;
+    account: Address;
+    shareAmount: Int as coins;
+}
+
+message(0x53545242) StTONRebase {
+    queryId: Int as uint64;
+    newTotalPooledTON: Int as coins;
+}
+
 contract VaultHub with Deployable {
     admin: Address;
     factory: Address;
     oracleAddress: Address;
+    stTON: Address;
     paused: Bool;
     vaultCount: Int as uint32;
     vaultRecords: map<Address, VaultRecord>;
@@ -117,10 +137,11 @@ contract VaultHub with Deployable {
     totalSharesMinted: Int as coins;
     accumulatedFees: map<Address, Int>;
 
-    init(admin: Address, factory: Address, oracleAddress: Address) {
+    init(admin: Address, factory: Address, oracleAddress: Address, stTON: Address) {
         self.admin = admin;
         self.factory = factory;
         self.oracleAddress = oracleAddress;
+        self.stTON = stTON;
         self.paused = false;
         self.vaultCount = 0;
         self.totalSharesMinted = 0;
@@ -280,6 +301,14 @@ contract VaultHub with Deployable {
         };
         self.vaultRecords.set(msg.vault, updated);
         self.totalSharesMinted = self.totalSharesMinted + msg.amount;
+
+        // Forward mint to StTON
+        send(SendParameters{
+            to: self.stTON,
+            value: ton("0.02"),
+            mode: 0,
+            body: StTONMint{ queryId: msg.queryId, recipient: msg.recipient, shareAmount: msg.amount }.toCell()
+        });
     }
 
     receive(msg: BurnShares) {
@@ -306,6 +335,14 @@ contract VaultHub with Deployable {
         };
         self.vaultRecords.set(msg.vault, updated);
         self.totalSharesMinted = self.totalSharesMinted - msg.amount;
+
+        // Forward burn to StTON
+        send(SendParameters{
+            to: self.stTON,
+            value: ton("0.02"),
+            mode: 0,
+            body: StTONBurn{ queryId: msg.queryId, account: msg.vault, shareAmount: msg.amount }.toCell()
+        });
     }
 
     receive(msg: ApplyVaultReport) {
@@ -329,6 +366,14 @@ contract VaultHub with Deployable {
             reportTimestamp: now()
         };
         self.vaultRecords.set(msg.vault, updated);
+
+        // Forward rebase to StTON with new total pooled TON = totalSharesMinted-weighted value
+        send(SendParameters{
+            to: self.stTON,
+            value: ton("0.02"),
+            mode: 0,
+            body: StTONRebase{ queryId: msg.queryId, newTotalPooledTON: self.totalSharesMinted }.toCell()
+        });
     }
 
     // Admin can update the factory address (needed for deploy sequencing)
@@ -356,6 +401,7 @@ contract VaultHub with Deployable {
 
     get fun get_admin(): Address { return self.admin; }
     get fun get_factory(): Address { return self.factory; }
+    get fun get_st_ton(): Address { return self.stTON; }
     get fun get_paused(): Bool { return self.paused; }
     get fun get_vault_count(): Int { return self.vaultCount; }
     get fun get_connect_deposit(): Int { return CONNECT_DEPOSIT; }

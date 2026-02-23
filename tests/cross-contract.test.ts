@@ -63,8 +63,10 @@ describe('Cross-contract flows', () => {
 
         // Simple solution: make hub accept admin as factory too (already set in init)
         // Deploy hub with admin as factory
+        // Deploy a dummy StTON address for VaultHub init (not used in these tests)
+        const stTONDummy = await blockchain.treasury('stTONDummy');
         vaultHub = blockchain.openContract(await VaultHub.fromInit(
-            admin.address, admin.address, reporter.address
+            admin.address, admin.address, reporter.address, stTONDummy.address
         ));
         await vaultHub.send(admin.getSender(), { value: toNano('0.1') }, { $$type: 'Deploy', queryId: 3n });
 
